@@ -32,7 +32,7 @@ jobs:
 
   build:
     needs: check-updates
-    if: ${{ needs.check-updates.outputs.updates-found == 'true' }}
+    if: ${{ needs.check-updates.outputs.updates-found == true }}
     runs-on: ubuntu-latest
     steps:
       - name: Build
@@ -40,7 +40,7 @@ jobs:
   
   publish:
     needs: check-updates
-    if: ${{ needs.check-updates.outputs.updates-found == 'false' }}
+    if: ${{ needs.check-updates.outputs.updates-found == false }}
     runs-on: ubuntu-latest
     steps:
       - name: Publish
