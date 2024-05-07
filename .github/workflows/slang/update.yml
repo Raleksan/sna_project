@@ -24,6 +24,8 @@ jobs:
         TIME_DIFF=$(( CURRENT_DATE - LAST_COMMIT_DATE ))
         if [ $TIME_DIFF -le 86400 ]; then
           echo "There are updates within the last 24 hours."
+          echo "::set-output name=updates::true"
         else
           echo "No updates within the last 24 hours."
+          echo "::set-output name=updates::false"
         fi

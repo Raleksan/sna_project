@@ -1,0 +1,47 @@
+name: svls_automatic
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at midnight
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+
+  check-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          repository: dalance/svls
+          ref: master
+      
+      - name: Analyse
+        run: |
+          LAST_COMMIT_DATE=$(git log -1 --format="%at" origin/master)
+          CURRENT_DATE=$(date +%s)
+          TIME_DIFF=$(( CURRENT_DATE - LAST_COMMIT_DATE ))
+          
+          if [ $TIME_DIFF -le 86400 ]; then
+            echo "There are updates within the last 24 hours."
+            echo "::set-output name=updates-found::true"
+          else
+            echo "No updates within the last 24 hours."
+            echo "::set-output name=updates-found::false"
+          fi
+
+  build:
+    needs: check-updates
+    if: ${{ needs.check-updates.outputs.updates-found == 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        run: echo "Building..."
+  
+  publish:
+    needs: check-updates
+    if: ${{ needs.check-updates.outputs.updates-found == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish
+        run: echo "Publishing..."
