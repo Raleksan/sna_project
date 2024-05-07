@@ -1,0 +1,46 @@
+name: Explore and Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  explore_and_build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        repository: MikePopoloski/slang 
+        
+    - name: Fetch updates from remote repository
+      run: git fetch --prune --unshallow
+      
+    - name: Install dependencies and build
+      run: |
+        cmake -B build
+        cmake --build build -j8
+        
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release ${{ github.run_number }}
+        draft: false
+        prerelease: false
+        
+    - name: Upload artifacts
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./path/to/artifact.zip
+        asset_name: artifact.zip
+        asset_content_type: application/zip
