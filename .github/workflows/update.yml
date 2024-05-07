@@ -26,5 +26,4 @@ jobs:
           echo "There are updates within the last 24 hours."
         else
           echo "No updates within the last 24 hours."
-          exit 1
         fi
