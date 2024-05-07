@@ -1,0 +1,28 @@
+name: Check Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at midnight
+
+jobs:
+  check_updates:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        repository: MikePopoloski/slang
+      
+    - name: Fetch updates from Repository
+      run: |
+        git fetch --prune --unshallow
+        LAST_COMMIT_DATE=$(git log -1 --format="%at" origin/main)
+        CURRENT_DATE=$(date +%s)
+        TIME_DIFF=$(( CURRENT_DATE - LAST_COMMIT_DATE ))
+        if [ $TIME_DIFF -le 86400 ]; then
+          echo "There are updates within the last 24 hours."
+        else
+          echo "No updates within the last 24 hours."
+          exit 1
+        fi

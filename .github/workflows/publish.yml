@@ -1,28 +1,20 @@
-name: Explore and Build
+name: Publish
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
 
 jobs:
-  explore_and_build:
+  publish:
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-      with:
-        repository: MikePopoloski/slang 
-        
-    - name: Fetch updates from remote repository
-      run: git fetch --prune --unshallow
       
-    - name: Install dependencies and build
-      run: |
-        cmake -B build
-        cmake --build build -j8
-        
     - name: Create release
       id: create_release
       uses: actions/create-release@v1
@@ -41,6 +33,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./path/to/artifact.zip
-        asset_name: artifact.zip
+        asset_path: ./slang/build/slang.zip # Path to the built artifact
+        asset_name: slang.zip
         asset_content_type: application/zip
