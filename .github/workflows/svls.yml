@@ -7,7 +7,7 @@ on:
 
 jobs:
 
-  check-update:
+  check-updates:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
