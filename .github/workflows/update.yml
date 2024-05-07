@@ -3,7 +3,8 @@ name: Check Updates
 on:
   schedule:
     - cron: '0 0 * * *'  # Runs every day at midnight
-
+  workflow_dispatch:  # Allows manual triggering
+  
 jobs:
   check_updates:
     runs-on: ubuntu-latest
