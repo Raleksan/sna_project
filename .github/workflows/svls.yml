@@ -34,7 +34,7 @@ jobs:
 
   build:
     needs: check-updates
-    if: ${{ needs.check-updates.outputs.updates-found == true }}
+    if: ${{ needs.check-updates.outputs.updates-found == false }}
 
     strategy:
       matrix:
