@@ -8,6 +8,36 @@ on:
   workflow_dispatch:
 
 jobs:
+
+collect-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download svls-binary artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: svls-binary
+          path: svls-binary
+
+      - name: Download slang-binary artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: slang-binary
+          path: slang-binary
+
+      - name: Create Archive
+        run: |
+          tar -czf actual_binary.tar.gz svls-binary slang-binary
+
+      - name: Upload Combined Archive
+        uses: actions/upload-artifact@v2
+        with:
+          name: actual-binary
+          path: actual_binary.tar.gz
+
+
   release:
     runs-on: ubuntu-latest
     steps:
@@ -34,8 +64,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./combined-artifacts.tar.gz
-          asset_name: combined-artifacts.tar.gz
+          asset_path: ./actual_binary.tar.gz
+          asset_name: actual_binary.tar.gz
           asset_content_type: application/gzip
 
       - name: Publish Release
