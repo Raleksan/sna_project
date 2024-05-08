@@ -34,7 +34,10 @@ jobs:
 
   build:
     needs: check-updates
-    if: ${{ needs.check-updates.outputs.updates-found == false }}
+    if: |
+      ${{ github.event_name == 'workflow_dispatch' 
+          || needs.check-updates.outputs.updates-found == true
+          || !contains(needs.check-updates.outputs.artifacts, 'svls-binary') }}
 
     strategy:
       matrix:
@@ -63,7 +66,14 @@ jobs:
 
       - name: Build for linux
         if: matrix.os == 'ubuntu-latest'
-        run: make release_lnx
+        run: |
+          cargo build --release --target=x86_64-unknown-linux-musl
+      
+      - name: Save Binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: svls-binary
+          path: target/x86_64-unknown-linux-musl/release/svls
       
   publish:
     needs: check-updates
