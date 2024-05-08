@@ -71,11 +71,12 @@ jobs:
       - name: Build
         run: cmake --build build/${{ matrix.preset }} -j8
 
-      - name: Create Zip Archive
-        run: zip -r slang-binary.zip build/${{ matrix.preset }}/bin
+      - name: Create Tar Archive
+        run: tar -czf slang-binary.tar.gz -C build/${{ matrix.preset }}/bin .
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: slang-binary
-          path: slang-binary.zip
+          path: slang-binary.tar.gz
+
