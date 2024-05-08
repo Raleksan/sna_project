@@ -9,45 +9,40 @@ jobs:
 
   check-updates:
     runs-on: ubuntu-latest
-    
     steps:
-    
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
           repository: dalance/svls
           ref: master
-      
+
       - name: Analyse
         run: |
           LAST_COMMIT_DATE=$(git log -1 --format="%at" origin/master)
           CURRENT_DATE=$(date +%s)
           TIME_DIFF=$(( CURRENT_DATE - LAST_COMMIT_DATE ))
-          
+
           if [ $TIME_DIFF -le 86400 ]; then
             echo "There are updates within the last 24 hours."
-            echo "updates-found=true" >> $GITHUB_OUTPUT
+            echo "updates-found=true" >> $GITHUB_ENV
           else
             echo "No updates within the last 24 hours."
-            echo "updates-found=false" >> $GITHUB_OUTPUT
+            echo "updates-found=false" >> $GITHUB_ENV
           fi
-
 
   build:
     needs: check-updates
-    if: |
-      ${{ github.event_name == 'workflow_dispatch' 
-          || needs.check-updates.outputs.updates-found == true
-          || !contains(needs.check-updates.outputs.artifacts, 'svls-binary')
-        }}
+    if: ${{ github.event_name == 'workflow_dispatch' 
+        || needs.check-updates.outputs.updates-found == 'true'
+        || !contains(needs.check-updates.outputs.cache-hit, 'true') }}
 
     strategy:
       matrix:
         os: [ubuntu-latest]
         rust: [stable]
-    
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - name: Setup Rust
         uses: hecrj/setup-rust-action@v2
@@ -66,12 +61,30 @@ jobs:
           rustup target add x86_64-unknown-linux-musl
           sudo apt-get -qq install musl-tools
 
+      - name: Restore Cache
+        uses: actions/cache@v2
+        id: restore_cache
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Build for linux
         if: matrix.os == 'ubuntu-latest'
         run: |
           cargo build --release --target=x86_64-unknown-linux-musl
           tar -czf svls.tar.gz target/x86_64-unknown-linux-musl/release/svls
-      
+
+      - name: Save Cache
+        if: steps.restore_cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+            
       - name: Save Binary
         uses: actions/upload-artifact@v2
         with:

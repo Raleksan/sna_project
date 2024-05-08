@@ -2,30 +2,30 @@ name: publish_automatic
 
 on:
   workflow_run:
-    workflows: ["svls_automatic", "slang-automatic"]
+    workflows: ["svls_automatic", "slang_automatic"]
     types:
       - completed
   workflow_dispatch:
 
 jobs:
 
-  collect-artifacts:
+  connect-cache:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Download svls-binary artifact
-        uses: actions/download-artifact@v2
+      - name: Restore svls-binary cache
+        uses: actions/cache@v2
         with:
-          name: svls-binary
           path: svls-binary
+          key: svls-binary-${{ github.sha }}
 
-      - name: Download slang-binary artifact
-        uses: actions/download-artifact@v2
+      - name: Restore slang-binary cache
+        uses: actions/cache@v2
         with:
-          name: slang-binary
           path: slang-binary
+          key: slang-binary-${{ github.sha }}
 
       - name: Create Archive
         run: |
@@ -39,12 +39,12 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    needs: [collect-artifacts]
+    needs: [connect-cache]
     steps:
       - name: Set Tag Date
         id: set_tag_date
         run: |
-          echo "tag_date=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          echo "tag_date=$(date +%Y-%m-%d)" >> $GITHUB_ENV
 
       - name: Create Draft Release
         id: create_release
