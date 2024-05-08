@@ -72,7 +72,7 @@ jobs:
         run: cmake --build build/${{ matrix.preset }} -j8
 
       - name: Create Zip Archive
-        run: zip -r slang-binary.zip build/${{ matrix.preset }}
+        run: zip -r slang-binary.zip build/${{ matrix.preset }}/bin
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
