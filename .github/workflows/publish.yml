@@ -5,6 +5,7 @@ on:
     workflows: ["svls_automatic", "slang-automatic"]
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   release:
