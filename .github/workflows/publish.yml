@@ -20,7 +20,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           tag_name: ${{ steps.set_tag_date.outputs.tag_date }}
           release_name: ${{ steps.set_tag_date.outputs.tag_date }}
@@ -31,7 +31,7 @@ jobs:
         id: upload_release_asset
         uses: actions/upload-release-asset@v1.0.1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./combined-artifacts.tar.gz
@@ -41,6 +41,6 @@ jobs:
       - name: Publish Release
         uses: eregon/publish-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           release_id: ${{ steps.create_release.outputs.id }}
