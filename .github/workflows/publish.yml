@@ -1,0 +1,61 @@
+name: publish_automatic
+
+on:
+  workflow_run:
+    workflows: ["svls_automatic", "slang-automatic"]
+    types:
+      - completed
+
+jobs:
+  collect-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download svls-binary artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: svls-binary
+          path: svls-binary
+
+      - name: Download slang-binary artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: slang-binary
+          path: slang-binary
+
+      - name: Create Archive
+        run: |
+          tar -czf combined-artifacts.tar.gz svls-binary slang-binary
+
+      - name: Upload Combined Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: combined-artifacts
+          path: combined-artifacts.tar.gz
+
+  publish-release:
+    needs: collect-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: $(date +%d-%m-%Y)  # Specify the tag name for the release
+          release_name: Combined Artifacts Release  # Specify the release name
+          body: Release with combined artifacts from svls and slang workflows.  # Specify the release body
+
+      - name: Upload Release Artifact
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: combined-artifacts.tar.gz  # Specify the path to the combined artifacts archive
+          asset_name: combined-artifacts.tar.gz  # Specify the name of the uploaded asset
+          asset_content_type: application/gzip  # Specify the content type of the uploaded asset
