@@ -1,4 +1,4 @@
-name: svls_automatic
+name: slang_automatic
 
 on:
   schedule:
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          repository: dalance/svls
+          repository: MikePopoloski/slang
           ref: master
       
       - name: Analyse
@@ -38,42 +38,44 @@ jobs:
     if: |
       ${{ github.event_name == 'workflow_dispatch' 
           || needs.check-updates.outputs.updates-found == true
-          || !contains(needs.check-updates.outputs.artifacts, 'svls-binary')
+          || !contains(needs.check-updates.outputs.artifacts, 'slang-binary')
         }}
 
     strategy:
       matrix:
         os: [ubuntu-latest]
-        rust: [stable]
-    
+        preset: [gcc-release]
+
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
-      - name: Setup Rust
-        uses: hecrj/setup-rust-action@v2
-        with:
-          rust-version: ${{ matrix.rust }}
+
+      - name: Install dependencies
+        run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main"
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo apt-get update
+        sudo apt-get install -y g++-13 g++-11 clang-18 clang-tidy-18
 
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          repository: dalance/svls
+          repository: MikePopoloski/slang
           ref: master
 
-      - name: Setup MUSL
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          rustup target add x86_64-unknown-linux-musl
-          sudo apt-get -qq install musl-tools
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }} -DSLANG_CI_BUILD=ON
+    
+      - name: Build
+        run: cmake --build build/${{ matrix.preset }} -j8
 
-      - name: Build for linux
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          cargo build --release --target=x86_64-unknown-linux-musl
-          tar -czf svls.tar.gz target/x86_64-unknown-linux-musl/release/svls
-      
-      - name: Save Binary
-        uses: actions/upload-artifact@v2
-        with:
-          name: svls-binary
-          path: svls.tar.gz
+    - name: Create Zip Archive
+      run: zip -r slang-binary.zip build/${{ matrix.preset }}
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: slang-binary
+        path: slang-binary.zip
