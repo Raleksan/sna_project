@@ -73,9 +73,9 @@ jobs:
   build_slang:
 
     strategy:
-      matrix:
-        os: [ubuntu-latest]
-        preset: [gcc-release]
+    matrix:
+      os: [ubuntu-latest]
+      preset: [gcc-release]
 
     runs-on: ${{ matrix.os }}
 
