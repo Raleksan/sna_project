@@ -165,6 +165,7 @@ jobs:
 
       - name: Create Archive
         run: |
+          mkdir -p svls slang
           tar -xzf svls-binary.tar.gz -C svls
           tar -xzf slang-binary.tar.gz -C slang
           tar -czf actual_binary.tar.gz svls slang
