@@ -1,0 +1,203 @@
+name: single_automatic
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+
+jobs:
+
+  build_svls:
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        rust: [stable]
+    
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          repository: dalance/svls
+          ref: master
+      
+      - name: Analyse
+        run: |
+          LAST_COMMIT_DATE=$(git log -1 --format="%at" origin/master)
+          CURRENT_DATE=$(date +%s)
+          TIME_DIFF=$(( CURRENT_DATE - LAST_COMMIT_DATE ))
+          
+          if [ $TIME_DIFF -le 86400 ]; then
+            echo "There are updates within the last 24 hours."
+            echo "svls-updates-found=true" >> $GITHUB_OUTPUT
+          else
+            echo "No updates within the last 24 hours."
+            echo "svls-updates-found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check 
+        if: |
+          ${{ ( needs.build_svls.outputs.svls-updates-found == false
+              && contains(needs.check-updates.outputs.artifacts, 'svls-binary') )
+              || github.event_name != 'workflow_dispatch' 
+            }}
+        run: |
+          exit 0
+
+      - name: Setup Rust
+        uses: hecrj/setup-rust-action@v2
+        with:
+          rust-version: ${{ matrix.rust }}
+
+      - name: Setup MUSL
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          rustup target add x86_64-unknown-linux-musl
+          sudo apt-get -qq install musl-tools
+
+      - name: Build for linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cargo build --release --target=x86_64-unknown-linux-musl
+          tar -czf svls-binary.tar.gz target/x86_64-unknown-linux-musl/release/svls
+      
+      - name: Save Binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: svls-binary
+          path: svls-binary.tar.gz
+
+  build_slang:
+
+    strategy:
+    matrix:
+      os: [ubuntu-latest]
+      preset: [gcc-release]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          repository: MikePopoloski/slang
+          ref: master
+      
+      - name: Analyse
+        run: |
+          LAST_COMMIT_DATE=$(git log -1 --format="%at" origin/master)
+          CURRENT_DATE=$(date +%s)
+          TIME_DIFF=$(( CURRENT_DATE - LAST_COMMIT_DATE ))
+          
+          if [ $TIME_DIFF -le 86400 ]; then
+            echo "There are updates within the last 24 hours."
+            echo "slang-updates-found=true" >> $GITHUB_OUTPUT
+          else
+            echo "No updates within the last 24 hours."
+            echo "slang-updates-found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check 
+        if: |
+          ${{ ( needs.build-slang.outputs.slang-updates-found == false
+              && contains(needs.check-updates.outputs.artifacts, 'slang-binary') )
+              || github.event_name != 'workflow_dispatch' 
+            }}
+        run: |
+          exit 0
+
+      - name: Install dependencies
+        run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main"
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y g++-13 g++-11 clang-18 clang-tidy-18
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: MikePopoloski/slang
+          ref: master
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }} -DSLANG_CI_BUILD=ON
+    
+      - name: Build
+        run: cmake --build build/${{ matrix.preset }} -j8
+
+      - name: Create Tar Archive
+        run: tar -czf slang-binary.tar.gz -C build/${{ matrix.preset }}/bin .
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: slang-binary
+          path: slang-binary.tar.gz
+
+  publish:
+    runs-on: ubuntu-latest
+
+    needs: [build_svls, build_slang]
+
+    steps:
+
+      - name: Download svls-binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: svls-binary
+          path: svls-binary.tar.gz
+
+      - name: Download slang-binary artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: slang-binary
+          path: slang-binary.tar.gz
+
+      - name: Create Archive
+        run: |
+          tar -czf actual_binary.tar.gz svls-binary slang-binary
+
+      - name: Upload Combined Archive
+        uses: actions/upload-artifact@v2
+        with:
+          name: actual-binary
+          path: actual_binary.tar.gz
+
+      - name: Set Tag Date
+        id: set_tag_date
+        run: |
+          echo "tag_date=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
+      - name: Create Draft Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          tag_name: ${{ steps.set_tag_date.outputs.tag_date }}
+          release_name: ${{ steps.set_tag_date.outputs.tag_date }}
+          draft: true
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./actual_binary.tar.gz
+          asset_name: actual_binary.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Publish Release
+        uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          release_id: ${{ steps.create_release.outputs.id }}

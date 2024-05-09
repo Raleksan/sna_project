@@ -19,15 +19,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: svls-binary
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.TOKEN }}
+          path: svls-binary.tar.gz
 
       - name: Download slang-binary artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v2
         with:
           name: slang-binary
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.TOKEN }}
+          path: slang-binary.tar.gz
 
       - name: Create Archive
         run: |
