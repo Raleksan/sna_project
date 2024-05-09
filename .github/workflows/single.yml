@@ -1,5 +1,6 @@
 name: single_automatic
 
+
 on:
   schedule:
     - cron: '0 0 * * *'
@@ -7,6 +8,7 @@ on:
 
 
 jobs:
+
 
   build_svls:
 
@@ -18,6 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
@@ -62,7 +65,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           cargo build --release --target=x86_64-unknown-linux-musl
-          tar -czf svls-binary.tar.gz target/x86_64-unknown-linux-musl/release/svls
+          tar -czf svls-binary.tar.gz -C target/x86_64-unknown-linux-musl/release/ .
       
       - name: Save Binary
         uses: actions/upload-artifact@v4
@@ -70,6 +73,7 @@ jobs:
           name: svls-binary
           path: svls-binary.tar.gz
           overwrite: true
+
 
   build_slang:
 
@@ -141,6 +145,7 @@ jobs:
           path: slang-binary.tar.gz
           overwrite: true
 
+
   publish:
     runs-on: ubuntu-latest
 
@@ -160,7 +165,9 @@ jobs:
 
       - name: Create Archive
         run: |
-          tar -czf actual_binary.tar.gz svls-binary.tar.gz slang-binary.tar.gz
+          tar -xzf svls-binary.tar.gz -C svls
+          tar -xzf slang-binary.tar.gz -C slang
+          tar -czf actual_binary.tar.gz svls slang
 
       - name: Upload Combined Archive
         uses: actions/upload-artifact@v4
