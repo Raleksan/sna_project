@@ -144,7 +144,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
-    needs: [build_svls]
+    needs: [build_svls, build_slang]
 
     steps:
 
