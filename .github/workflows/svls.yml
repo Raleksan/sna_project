@@ -70,10 +70,10 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           cargo build --release --target=x86_64-unknown-linux-musl
-          tar -czf svls.tar.gz target/x86_64-unknown-linux-musl/release/svls
+          tar -czf svls-binary.tar.gz target/x86_64-unknown-linux-musl/release/svls
       
       - name: Save Binary
         uses: actions/upload-artifact@v2
         with:
           name: svls-binary
-          path: svls.tar.gz
+          path: svls-binary.tar.gz
