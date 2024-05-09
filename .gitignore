@@ -1,0 +1,13 @@
+# Ignore all files except .sh, .yml, and .md files
+*
+
+# Allow .sh, .yml, and .md files
+!*.yml
+!*.md
+!*.gitignore
+!*.sh
+
+# Allow directories up to two layers deep
+!*/
+!**/*
+!**/**/
