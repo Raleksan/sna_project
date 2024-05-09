@@ -171,7 +171,7 @@ jobs:
       - name: Set Tag Date
         id: set_tag_date
         run: |
-          echo "tag_date=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          echo "tag_date=$(date +%d-%m-%Y)" >> $GITHUB_OUTPUT
 
       - name: Create Draft Release
         id: create_release
