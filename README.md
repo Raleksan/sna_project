@@ -2,9 +2,9 @@
 
 ## Project info
 
-### Group members:
+### Group members
 
-1. Aleksandr Ryabov (B22-CBS-01, [a.ryabov@innopolis.university](mailto:a.ryabov@innopolis.university))
+- Aleksandr Ryabov (B22-CBS-01, [a.ryabov@innopolis.university](mailto:a.ryabov@innopolis.university))
 
 ## Project objective
 
@@ -13,26 +13,30 @@ is automated in installation, customization, and upgrades,
 which will be useful to the developer as a unified development tool.
 
 ## Installation instructions
-- TBA
+- Run following command to download and directly execute a script from GitHub
+
+```
+    curl -sSL https://raw.githubusercontent.com/raleksan/sna_project/main/scripts/install.sh | bash
+```
 
 ## Description of project components
 
 Generally project consist of 2 parts:
 GitHub Action workflow and installation/update script.
 
-### Description of workflow:
+### Description of workflow
 
-- Workflow Trigger:
+- Workflow Trigger
     - This workflow is triggered automatically on a daily schedule at midnight and can also be manually triggered.
 
-- Jobs:
+- Jobs
     - `build_svls`: This job sets up the environment, checks for updates in the `dalance/svls` repository, builds the `svls` binary if updates are found, and archives it.
 
     - `build_slang`: Similarly, this job sets up the environment, checks for updates in the `MikePopoloski/slang` repository, builds the `slang` binary if updates are found, and archives it
 
     - `publish`: Once both binaries are built, this job downloads them, combines them into a single archive, creates a draft release based on the current date, uploads the combined archive as a release asset, and finally publishes the draft release.
 
-### Description of installation script:
+### Description of installation script
 
 - Bash script automates the installation of a toolkit by first checking for sudo privileges and welcoming the user. It then fetches information about the latest release of the toolkit from a specified GitHub repository.
 
