@@ -1,14 +1,11 @@
 name: single_automatic
 
-
 on:
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
-
 jobs:
-
 
   build_svls:
 
@@ -73,7 +70,6 @@ jobs:
           name: svls-binary
           path: svls-binary.tar.gz
           overwrite: true
-
 
   build_slang:
 
@@ -144,7 +140,6 @@ jobs:
           name: slang-binary
           path: slang-binary.tar.gz
           overwrite: true
-
 
   publish:
     runs-on: ubuntu-latest
