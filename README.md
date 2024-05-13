@@ -6,6 +6,10 @@
 
 - Aleksandr Ryabov (B22-CBS-01, [a.ryabov@innopolis.university](mailto:a.ryabov@innopolis.university))
 
+Project demo:
+
+- https://www.youtube.com/watch?v=60-k7UB-g6I
+
 ## Project objective
 
 The goal of the project is to provide a toolkit that 
@@ -16,7 +20,7 @@ which will be useful to the developer as a unified development tool.
 - Run following command to download and directly execute a script from GitHub
 
 ```
-    curl -sSL https://raw.githubusercontent.com/raleksan/sna_project/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/raleksan/sna_project/main/scripts/install.sh | bash
 ```
 
 ## Description of project components
