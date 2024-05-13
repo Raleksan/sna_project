@@ -6,7 +6,7 @@
 
 - Aleksandr Ryabov (B22-CBS-01, [a.ryabov@innopolis.university](mailto:a.ryabov@innopolis.university))
 
-Project demo:
+### Project demo
 
 - https://www.youtube.com/watch?v=60-k7UB-g6I
 
